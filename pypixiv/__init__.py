@@ -1,3 +1,3 @@
-from .api import PixivAppApi
+from .api import PixivAppApiClient
 
-__all__ = ["PixivAppApi"]
+__all__ = ["PixivAppApiClient"]

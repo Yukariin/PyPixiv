@@ -8,7 +8,7 @@ import requests
 from .utils import get_md5, get_time, get_date
 
 
-class BaseApi:
+class ApiClient:
     # App defines
     app_os = "android"
     app_version = "5.0.61"
@@ -45,12 +45,11 @@ class BaseApi:
 
         return json.loads(json_str, object_hook=_obj_hook)
 
-    def api_call(self, method, url, params=None, data=None, headers=None, stream=False):
-        if headers is None:
-            headers = {}
-
+    def call_api(self, method, url, params=None, data=None, headers=None, stream=False):
         req_time = get_time()
         req_hash = get_md5(req_time + self.client_hash)
+
+        headers = headers or {}
         headers["User-Agent"] = self.short_ua
         headers["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8"
         headers["Accept-Language"] = "*"
@@ -70,18 +69,16 @@ class BaseApi:
             return self.session.post(url, params=params, data=data, headers=headers, stream=stream)
         elif method == "DELETE":
             return self.session.delete(url, params=params, data=data, headers=headers, stream=stream)
+        else:
+            raise ValueError("Unknown method: %s" % method)
 
-        raise Exception("Unknown method: %s" % method)
-
-    def auth_api_call(self, method, url, params=None, data=None, headers=None, stream=False):
+    def auth_call_api(self, method, url, params=None, data=None, headers=None, stream=False):
         self.require_auth()
 
-        if headers is None:
-            headers = {}
-
+        headers = headers or {}
         headers["Authorization"] = "Bearer %s" % self.access_token
 
-        return self.api_call(method, url, params, data, headers, stream)
+        return self.call_api(method, url, params, data, headers, stream)
 
     def require_auth(self):
         if self.access_token is None:
@@ -113,7 +110,7 @@ class BaseApi:
         else:
             raise Exception("[ERROR] auth() but no password or refresh_token is set.")
 
-        r = self.api_call("POST", url, data=data)
+        r = self.call_api("POST", url, data=data)
         print(r.text)
         if r.status_code not in [200, 301, 302]:
             raise Exception("[ERROR] auth() failed!\nHTTP %s: %s" % (r.status_code, r.text))
@@ -135,12 +132,12 @@ class BaseApi:
 
         file_path = os.path.join(path, name)
         if (not os.path.exists(file_path)) or replace:
-            res = self.api_call("GET", url, headers={"Referer": referer}, stream=True)
+            res = self.call_api("GET", url, headers={"Referer": referer}, stream=True)
             with open(file_path, "wb") as f:
                 shutil.copyfileobj(res.raw, f)
 
 
-class PixivAppApi(BaseApi):
+class PixivAppApiClient(ApiClient):
     base_url = "https://app-api.pixiv.net"
 
     def __init__(self):
@@ -148,7 +145,7 @@ class PixivAppApi(BaseApi):
 
     def app_info(self):
         url = self.base_url + "/v1/application-info/android"
-        r = self.api_call("GET", url)
+        r = self.call_api("GET", url)
 
         return self.parse_json(r.text)
 
@@ -159,13 +156,13 @@ class PixivAppApi(BaseApi):
             "slug": slug,
             "sort": sort
         }
-        r = self.auth_api_call("GET", url, params=params)
+        r = self.auth_call_api("GET", url, params=params)
 
         return self.parse_json(r.text)
 
     def emoji(self):
         url = self.base_url + "v1/emoji"
-        r = self.api_call("GET", url)
+        r = self.call_api("GET", url)
 
         return self.parse_json(r.text)
 
@@ -173,7 +170,7 @@ class PixivAppApi(BaseApi):
     def follow_illusts(self, restrict="public"):
         url = self.base_url + "/v2/illust/follow"
         params = {"restrict": restrict}
-        r = self.auth_api_call("GET", url, params=params)
+        r = self.auth_call_api("GET", url, params=params)
 
         return self.parse_json(r.text)
 
@@ -181,13 +178,13 @@ class PixivAppApi(BaseApi):
     def follow_novels(self, restrict="public"):
         url = self.base_url + "/v1/novel/follow"
         params = {"restrict": restrict}
-        r = self.auth_api_call("GET", url, params=params)
+        r = self.auth_call_api("GET", url, params=params)
 
         return self.parse_json(r.text)
 
     def force_like_illusts(self):
         url = self.base_url + "v1/walkthrough/force-like-illusts"
-        r = self.api_call("GET", url)
+        r = self.call_api("GET", url)
 
         return self.parse_json(r.text)
 
@@ -197,7 +194,7 @@ class PixivAppApi(BaseApi):
             "filter": filter,
             "illust_id": illust_id
         }
-        r = self.auth_api_call("GET", url, params=params)
+        r = self.auth_call_api("GET", url, params=params)
 
         return self.parse_json(r.text)
 
@@ -208,20 +205,20 @@ class PixivAppApi(BaseApi):
             "user_id": user_id,
             "restrict": restrict
         }
-        r = self.auth_api_call("GET", url, params=params)
+        r = self.auth_call_api("GET", url, params=params)
 
         return self.parse_json(r.text)
 
     def illust_browsing_history(self):
         url = self.base_url + "/v1/user/browsing-history/illusts"
-        r = self.auth_api_call("GET", url)
+        r = self.auth_call_api("GET", url)
 
         return self.parse_json(r.text)
 
     def illust_comments(self, illust_id):
         url = self.base_url + "/v1/illust/comments"
         params = {"illust_id": illust_id}
-        r = self.auth_api_call("GET", url, params=params)
+        r = self.auth_call_api("GET", url, params=params)
 
         return self.parse_json(r.text)
 
@@ -238,7 +235,7 @@ class PixivAppApi(BaseApi):
             "mode": mode,
             "date": date
         }
-        r = self.auth_api_call("GET", url, params=params)
+        r = self.auth_call_api("GET", url, params=params)
 
         return self.parse_json(r.text)
 
@@ -248,6 +245,6 @@ class PixivAppApi(BaseApi):
             "filter": filter,
             "illust_id": illust_id
         }
-        r = self.auth_api_call("GET", url, params=params)
+        r = self.auth_call_api("GET", url, params=params)
 
         return self.parse_json(r.text)

@@ -1,3 +1,3 @@
-from pypixiv import PixivAppApi
+from .api import PixivAppApi
 
 __all__ = ["PixivAppApi"]

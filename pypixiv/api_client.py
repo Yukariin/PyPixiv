@@ -5,7 +5,7 @@ from collections import namedtuple
 
 import requests
 
-from .utils import get_md5, get_time, get_date
+from .utils import get_time, get_md5
 
 
 class ApiClient:
@@ -24,7 +24,7 @@ class ApiClient:
     # UA defines (based on device and app defines)
     user_agent = "PixivAndroidApp/%s (Android %s; %s)" % (app_version, os_version, device_model)
     short_ua = "PixivAndroidApp/%s" % app_version
-    
+
     # App/OS specific keys
     # android - 5.0.61
     client_id = "MOBrBDS8blbauoSck0ZfDbtuzpyT"
@@ -53,16 +53,16 @@ class ApiClient:
         headers["User-Agent"] = self.short_ua
         headers["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8"
         headers["Accept-Language"] = "*"
-        
+
         headers["App-OS"] = self.app_os
         headers["App-OS-Version"] = self.os_version
         headers["App-Version"] = self.app_version
-        
+
         headers["X-Client-Time"] = req_time
         headers["X-Client-Hash"] = req_hash
 
         print("RequestUrl %s %s" % (method, url))
-        
+
         if method == "GET":
             return self.session.get(url, params=params, data=data, headers=headers, stream=stream)
         elif method == "POST":
@@ -135,116 +135,3 @@ class ApiClient:
             res = self.call_api("GET", url, headers={"Referer": referer}, stream=True)
             with open(file_path, "wb") as f:
                 shutil.copyfileobj(res.raw, f)
-
-
-class PixivAppApiClient(ApiClient):
-    base_url = "https://app-api.pixiv.net"
-
-    def __init__(self):
-        super().__init__()
-
-    def app_info(self):
-        url = self.base_url + "/v1/application-info/android"
-        r = self.call_api("GET", url)
-
-        return self.parse_json(r.text)
-
-    def contest_illusts(self, slug="", sort="", filter="for_android"):
-        url = self.base_url + "v1/contest/illusts"
-        params = {
-            "filter": filter,
-            "slug": slug,
-            "sort": sort
-        }
-        r = self.auth_call_api("GET", url, params=params)
-
-        return self.parse_json(r.text)
-
-    def emoji(self):
-        url = self.base_url + "v1/emoji"
-        r = self.call_api("GET", url)
-
-        return self.parse_json(r.text)
-
-    # restrict: [restrict, private, all]
-    def follow_illusts(self, restrict="public"):
-        url = self.base_url + "/v2/illust/follow"
-        params = {"restrict": restrict}
-        r = self.auth_call_api("GET", url, params=params)
-
-        return self.parse_json(r.text)
-
-    # restrict: [restrict, private, all]
-    def follow_novels(self, restrict="public"):
-        url = self.base_url + "/v1/novel/follow"
-        params = {"restrict": restrict}
-        r = self.auth_call_api("GET", url, params=params)
-
-        return self.parse_json(r.text)
-
-    def force_like_illusts(self):
-        url = self.base_url + "v1/walkthrough/force-like-illusts"
-        r = self.call_api("GET", url)
-
-        return self.parse_json(r.text)
-
-    def illust(self, illust_id, filter="for_android"):
-        url = self.base_url + "/v1/illust/detail"
-        params = {
-            "filter": filter,
-            "illust_id": illust_id
-        }
-        r = self.auth_call_api("GET", url, params=params)
-
-        return self.parse_json(r.text)
-
-    # restrict: [restrict, private, all]
-    def illust_bookmark_tags(self, user_id, restrict="public"):
-        url = self.base_url + "/v1/user/bookmark-tags/illust"
-        params = {
-            "user_id": user_id,
-            "restrict": restrict
-        }
-        r = self.auth_call_api("GET", url, params=params)
-
-        return self.parse_json(r.text)
-
-    def illust_browsing_history(self):
-        url = self.base_url + "/v1/user/browsing-history/illusts"
-        r = self.auth_call_api("GET", url)
-
-        return self.parse_json(r.text)
-
-    def illust_comments(self, illust_id):
-        url = self.base_url + "/v1/illust/comments"
-        params = {"illust_id": illust_id}
-        r = self.auth_call_api("GET", url, params=params)
-
-        return self.parse_json(r.text)
-
-    # mode: [day, week, month,
-    #        day_male, day_female,
-    #        week_original, week_rookie,
-    #        day_r18, day_male_r18, day_female_r18,
-    #        week_r18, week_r18g]
-    # date: "Y-m-d"
-    def illust_ranking(self, mode="day", date=get_date(), filter="for_android"):
-        url = self.base_url + "/v1/illust/ranking"
-        params = {
-            "filter": filter,
-            "mode": mode,
-            "date": date
-        }
-        r = self.auth_call_api("GET", url, params=params)
-
-        return self.parse_json(r.text)
-
-    def illust_recommended(self, illust_id, filter="for_android"):
-        url = self.base_url + "/v2/illust/related"
-        params = {
-            "filter": filter,
-            "illust_id": illust_id
-        }
-        r = self.auth_call_api("GET", url, params=params)
-
-        return self.parse_json(r.text)

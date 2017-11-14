@@ -1,0 +1,2 @@
+# PyPixiv
+Python Pixiv API

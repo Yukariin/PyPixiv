@@ -51,8 +51,8 @@ All URIs are relative to *https://app-api.pixiv.net*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*PixivAppApiClient* | **app_info** | **GET** /v1/application-info/android |
-*PixivAppApiClient* | **emoji** | **GET** /v1/emoji |
+*PixivAppApi* | **app_info** | **GET** /v1/application-info/android |
+*PixivAppApi* | **emoji** | **GET** /v1/emoji |
 
 ## Author
 

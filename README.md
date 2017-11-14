@@ -39,7 +39,7 @@ Please follow the [installation procedure](#installation--usage)
 ```python
 import pypixiv
 # create an instance of the API class
-api_instance = pypixiv.PixivAppApiClient()
+api_instance = pypixiv.PixivAppApi()
 
 api_response = api_instance.app_info()
 print(api_response)

@@ -37,7 +37,7 @@ import pypixiv
 Please follow the [installation procedure](#installation--usage)
 
 ```python
-import swagger_client
+import pypixiv
 # create an instance of the API class
 api_instance = pypixiv.PixivAppApiClient()
 
@@ -51,7 +51,8 @@ All URIs are relative to *https://app-api.pixiv.net*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*PixivAppApiClient* | **app_info** | **GET** /v1/application-info/android | 
+*PixivAppApiClient* | **app_info** | **GET** /v1/application-info/android |
+*PixivAppApiClient* | **emoji** | **GET** /v1/emoji |
 
 ## Author
 

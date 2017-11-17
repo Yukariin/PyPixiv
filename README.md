@@ -1,7 +1,7 @@
 # PyPixiv [![Build Status](https://travis-ci.org/Yukariin/PyPixiv.svg)](https://travis-ci.org/Yukariin/PyPixiv)
 Unofficial Python API client based on specification extracted from Pixiv Android App v5.0.61
 
-## Requirements.
+## Requirements
 
 Python 3.4+ and [requests](https://pypi.python.org/pypi/requests)
 
@@ -51,8 +51,12 @@ All URIs are relative to *https://app-api.pixiv.net*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*PixivAppApi* | **app_info** | **GET** /v1/application-info/android |
-*PixivAppApi* | **emoji** | **GET** /v1/emoji |
+*PixivAppApi* | **app_info** | **GET** /v1/application-info/android | Get application info for Android device (no auth needed)
+*PixivAppApi* | **emoji** | **GET** /v1/emoji | List available emojis (no auth needed)
+
+## Documentation For Authorization
+
+All endpoints marked with `no auth needed` do not require authorization.
 
 ## Author
 

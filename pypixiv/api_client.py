@@ -16,10 +16,6 @@ class ApiClient:
     # Device defines
     os_version = "6.0"
     device_model = "Google Pixel C - 6.0.0 - API 23 - 2560x1800"
-    # By default 5.0.61 app gets device token by
-    # android.content.SharedPreferences.getString(String key, String defValue)
-    # and uses `pixiv` as defValue
-    device_token = "pixiv"
 
     # UA defines (based on device and app defines)
     user_agent = "PixivAndroidApp/%s (Android %s; %s)" % (app_version, os_version, device_model)
@@ -34,6 +30,11 @@ class ApiClient:
     access_token = None
     refresh_token = None
     user_id = 0
+    # By default 5.0.61 app gets device token by
+    # android.content.SharedPreferences.getString(String key, String defValue)
+    # and uses `pixiv` as defValue
+    # Then app calls auth() and get tokens and store required device_token into SharedPreferences file
+    device_token = "pixiv"
 
     def __init__(self):
         self.session = requests.Session()
@@ -62,6 +63,9 @@ class ApiClient:
         headers["X-Client-Hash"] = req_hash
 
         print("RequestUrl %s %s" % (method, url))
+        
+        if data is not None:
+            print("RequestPostParam %s" % data)
 
         if method == "GET":
             return self.session.get(url, params=params, data=data, headers=headers, stream=stream)
@@ -108,10 +112,9 @@ class ApiClient:
             data["grant_type"] = "refresh_token"
             data["refresh_token"] = refresh_token or self.refresh_token
         else:
-            raise Exception("[ERROR] auth() but no password or refresh_token is set.")
+            raise ValueError("no password or refresh_token is set")
 
         r = self.call_api("POST", url, data=data)
-        print(r.text)
         if r.status_code not in [200, 301, 302]:
             raise Exception("[ERROR] auth() failed!\nHTTP %s: %s" % (r.status_code, r.text))
 
@@ -121,6 +124,7 @@ class ApiClient:
             self.access_token = token.response.access_token
             self.refresh_token = token.response.refresh_token
             self.user_id = token.response.user.id
+            self.device_token = token.response.device_token
         except:
             print("JSON parse error!")
 

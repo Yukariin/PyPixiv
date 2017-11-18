@@ -51,8 +51,8 @@ All URIs are relative to *https://app-api.pixiv.net*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*PixivAppApi* | **app_info** | **GET** /v1/application-info/android | Get application info for Android device (no auth needed)
-*PixivAppApi* | **emoji** | **GET** /v1/emoji | List available emojis (no auth needed)
+*PixivAppApi* | **get_app_info** | **GET** /v1/application-info/android | Get application info for Android device (no auth needed)
+*PixivAppApi* | **get_emoji** | **GET** /v1/emoji | List available emojis (no auth needed)
 
 ## Documentation For Authorization
 

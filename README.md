@@ -1,5 +1,5 @@
 # PyPixiv [![Build Status](https://travis-ci.org/Yukariin/PyPixiv.svg)](https://travis-ci.org/Yukariin/PyPixiv)
-Unofficial Python API client based on specification extracted from Pixiv Android App v5.0.61
+Unofficial Python API client based on specification extracted from Pixiv Android App v5.0.61 and [PixivPy](https://github.com/upbit/pixivpy).
 
 ## Requirements
 

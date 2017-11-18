@@ -5,7 +5,7 @@ from collections import namedtuple
 
 import requests
 
-from .utils import get_time, get_md5
+from .utils import get_time, get_md5, PixivError, PixivAuthFailed
 
 
 class ApiClient:
@@ -46,7 +46,7 @@ class ApiClient:
 
         return json.loads(json_str, object_hook=_obj_hook)
 
-    def call_api(self, method, url, params=None, data=None, headers=None, stream=False):
+    def call_api(self, method: str, url: str, params: dict=None, data: dict=None, headers: dict=None, stream: bool=False):
         req_time = get_time()
         req_hash = get_md5(req_time + self.client_hash)
 
@@ -63,20 +63,31 @@ class ApiClient:
         headers["X-Client-Hash"] = req_hash
 
         print("RequestUrl %s %s" % (method, url))
-        
-        if data is not None:
-            print("RequestPostParam %s" % data)
 
+        if data is not None:
+            param = ""
+            for key, value in data.items():
+                if key != "password":
+                    param += "%s: %s " % (key, value)
+
+            print("RequestPostParam %s" % param)
+
+        res = None
         if method == "GET":
-            return self.session.get(url, params=params, data=data, headers=headers, stream=stream)
+            res = self.session.get(url, params=params, data=data, headers=headers, stream=stream)
         elif method == "POST":
-            return self.session.post(url, params=params, data=data, headers=headers, stream=stream)
+            res = self.session.post(url, params=params, data=data, headers=headers, stream=stream)
         elif method == "DELETE":
-            return self.session.delete(url, params=params, data=data, headers=headers, stream=stream)
+            res = self.session.delete(url, params=params, data=data, headers=headers, stream=stream)
         else:
             raise ValueError("Unknown method: %s" % method)
 
-    def auth_call_api(self, method, url, params=None, data=None, headers=None, stream=False):
+        if res.status_code != 200:
+            raise PixivError(res.text)
+
+        return res
+
+    def auth_call_api(self, method: str, url: str, params: dict=None, data: dict=None, headers: dict=None, stream: bool=False):
         self.require_auth()
 
         headers = headers or {}
@@ -88,14 +99,14 @@ class ApiClient:
         if self.access_token is None:
             raise Exception("Authentication required! Call login() or set_auth() first!")
 
-    def set_auth(self, access_token, refresh_token=None):
+    def set_auth(self, access_token: str, refresh_token: str=None):
         self.access_token = access_token
         self.refresh_token = refresh_token
 
-    def login(self, username, password):
+    def login(self, username: str, password: str):
         return self.auth(username, password)
 
-    def auth(self, username=None, password=None, refresh_token=None):
+    def auth(self, username: str=None, password: str=None, refresh_token: str=None):
         url = "https://oauth.secure.pixiv.net/auth/token"
         data = {
             "client_id": self.client_id,
@@ -116,21 +127,17 @@ class ApiClient:
 
         r = self.call_api("POST", url, data=data)
         if r.status_code not in [200, 301, 302]:
-            raise Exception("[ERROR] auth() failed!\nHTTP %s: %s" % (r.status_code, r.text))
+            raise PixivAuthFailed(r.text)
 
-        token = None
-        try:
-            token = self.parse_json(r.text)
-            self.access_token = token.response.access_token
-            self.refresh_token = token.response.refresh_token
-            self.user_id = token.response.user.id
-            self.device_token = token.response.device_token
-        except:
-            print("JSON parse error!")
+        token = self.parse_json(r.text)
+        self.access_token = token.response.access_token
+        self.refresh_token = token.response.refresh_token
+        self.user_id = token.response.user.id
+        self.device_token = token.response.device_token
 
         return token
 
-    def download(self, url, path=os.path.curdir, name=None, replace=False, referer="https://app-api.pixiv.net/"):
+    def download(self, url: str, path: str=os.path.curdir, name: str=None, replace: bool=False, referer: str="https://app-api.pixiv.net/"):
         if not name:
             name = os.path.basename(url)
 

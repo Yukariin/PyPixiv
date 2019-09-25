@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import shutil
@@ -29,6 +30,7 @@ class ApiClient:
 
     access_token = None
     refresh_token = None
+    expire = None
     user_id = 0
     # By default 5.0.61 app gets device token by
     # android.content.SharedPreferences.getString(String key, String defValue)
@@ -62,7 +64,7 @@ class ApiClient:
         headers["X-Client-Time"] = req_time
         headers["X-Client-Hash"] = req_hash
 
-        print("RequestUrl %s %s" % (method, url))
+        #print("RequestUrl %s %s" % (method, url))
 
         if data is not None:
             param = ""
@@ -70,7 +72,7 @@ class ApiClient:
                 if key != "password":
                     param += "%s: %s " % (key, value)
 
-            print("RequestPostParam %s" % param)
+            #print("RequestPostParam %s" % param)
 
         res = None
         if method == "GET":
@@ -83,12 +85,15 @@ class ApiClient:
             raise ValueError("Unknown method: %s" % method)
 
         if res.status_code != 200:
+            #print(res.status_code)
             raise PixivError(res.text)
 
         return res
 
     def auth_call_api(self, method: str, url: str, params: dict=None, data: dict=None, headers: dict=None, stream: bool=False):
         self.require_auth()
+        if (datetime.datetime.now() > self.expire) and (self.refresh_token is not None):
+            self.auth(refresh_token=self.refresh_token);
 
         headers = headers or {}
         headers["Authorization"] = "Bearer %s" % self.access_token
@@ -132,6 +137,7 @@ class ApiClient:
         token = self.parse_json(r.text)
         self.access_token = token.response.access_token
         self.refresh_token = token.response.refresh_token
+        self.expire = datetime.datetime.now() + datetime.timedelta(seconds=token.response.expires_in)
         self.user_id = token.response.user.id
         self.device_token = token.response.device_token
 
